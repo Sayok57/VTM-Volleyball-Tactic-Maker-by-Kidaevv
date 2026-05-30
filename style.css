@@ -41,6 +41,7 @@ main{
     height: 100%;
     background-color: var(--field-color);
     border: 8px solid var(--line-color);
+    touch-action: none;
 }
 .lines-container{
     padding: 25vh 0 25vh 0;
@@ -80,6 +81,7 @@ main{
     font-size: 12px;
     font-weight: 800;
     color: black;
+    touch-action: manipulation;
 }
 .s{
     background-color: var(--s-color);
@@ -111,4 +113,10 @@ button{
     font-size: 20px;
     font-weight: 800;
     color: black;
+}
+@media (max-width: 600px) {
+    body {
+        padding: 8px;
+        gap: 8px;
+    }
 }
