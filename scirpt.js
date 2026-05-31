@@ -27,10 +27,7 @@
         return 'OH';
     }
     
-    function getPlayerColor(type, customColor = null) {
-        if (type === 'CUSTOM' && customColor) {
-            return customColor;
-        }
+    function getPlayerColor(type) {
         switch(type) {
             case 'S': return 'var(--s-color, #ff3300)';
             case 'OP': return 'var(--op-color, #ff0077)';
@@ -76,10 +73,13 @@
             customEditorPanel = null;
         }
         
+        const rect = player.getBoundingClientRect();
+        const fieldRect = field.getBoundingClientRect();
+        
         const panel = document.createElement('div');
-        panel.style.position = 'absolute';
-        panel.style.left = (parseFloat(player.style.left) + 60) + 'px';
-        panel.style.top = (parseFloat(player.style.top) - 20) + 'px';
+        panel.style.position = 'fixed';
+        panel.style.left = (rect.left + 60) + 'px';
+        panel.style.top = (rect.top - 20) + 'px';
         panel.style.backgroundColor = 'white';
         panel.style.borderRadius = '12px';
         panel.style.padding = '10px';
@@ -92,24 +92,14 @@
         const nameInput = document.createElement('input');
         nameInput.type = 'text';
         nameInput.placeholder = 'Имя игрока';
+        nameInput.style.backgroundColor = "white";
         nameInput.value = player.getAttribute('data-custom-name') || player.textContent;
         nameInput.maxLength = 12;
         nameInput.style.padding = '6px';
         nameInput.style.fontSize = '12px';
         nameInput.style.color = "black";
-        
-        const colorLabel = document.createElement('div');
-        colorLabel.textContent = 'Цвет:';
-        colorLabel.style.fontSize = '12px';
-        colorLabel.style.fontWeight = 'bold';
-        
-        const colorPicker = document.createElement('input');
-        colorPicker.type = 'color';
-        const currentColor = player.getAttribute('data-custom-color') || getComputedStyle(document.documentElement).getPropertyValue('--custom-color').trim() || '#9b59b6';
-        colorPicker.value = currentColor;
-        colorPicker.style.width = '100%';
-        colorPicker.style.height = '35px';
-        colorPicker.style.cursor = 'pointer';
+        nameInput.style.borderRadius = '6px';
+        nameInput.style.border = '1px solid #ccc';
         
         const buttonContainer = document.createElement('div');
         buttonContainer.style.display = 'flex';
@@ -126,6 +116,7 @@
         saveBtn.style.cursor = 'pointer';
         saveBtn.style.fontSize = '12px';
         saveBtn.style.fontWeight = "400";
+        saveBtn.style.borderRadius = '6px';
         
         const deleteBtn = document.createElement('button');
         deleteBtn.textContent = 'Удалить';
@@ -136,6 +127,7 @@
         deleteBtn.style.cursor = 'pointer';
         deleteBtn.style.fontSize = '12px';
         deleteBtn.style.fontWeight = "400";
+        deleteBtn.style.borderRadius = '6px';
         
         const cancelBtn = document.createElement('button');
         cancelBtn.textContent = 'Отмена';
@@ -146,14 +138,13 @@
         cancelBtn.style.cursor = 'pointer';
         cancelBtn.style.fontSize = '12px';
         cancelBtn.style.fontWeight = "400";
+        cancelBtn.style.borderRadius = '6px';
         
         buttonContainer.appendChild(saveBtn);
         buttonContainer.appendChild(deleteBtn);
         buttonContainer.appendChild(cancelBtn);
         
         panel.appendChild(nameInput);
-        panel.appendChild(colorLabel);
-        panel.appendChild(colorPicker);
         panel.appendChild(buttonContainer);
         
         function closePanel() {
@@ -166,7 +157,6 @@
         
         saveBtn.addEventListener('click', () => {
             const newName = nameInput.value.trim();
-            const newColor = colorPicker.value;
             
             if (newName) {
                 player.textContent = newName;
@@ -176,8 +166,6 @@
                 player.setAttribute('data-custom-name', 'N/A');
             }
             
-            player.style.backgroundColor = newColor;
-            player.setAttribute('data-custom-color', newColor);
             closePanel();
         });
         
@@ -188,14 +176,16 @@
         
         cancelBtn.addEventListener('click', closePanel);
         
-        document.addEventListener('click', function onClickOutside(e) {
-            if (panel && !panel.contains(e.target) && e.target !== player) {
-                closePanel();
-                document.removeEventListener('click', onClickOutside);
-            }
-        });
+        setTimeout(() => {
+            document.addEventListener('click', function onClickOutside(e) {
+                if (panel && !panel.contains(e.target) && e.target !== player) {
+                    closePanel();
+                    document.removeEventListener('click', onClickOutside);
+                }
+            });
+        }, 10);
         
-        field.appendChild(panel);
+        document.body.appendChild(panel);
         customEditorPanel = panel;
         activeCustomPlayer = player;
     }
@@ -211,12 +201,8 @@
         ball.style.borderRadius = '50%';
         ball.style.cursor = 'grab';
         ball.style.zIndex = '90';
-        ball.style.display = 'flex';
-        ball.style.alignItems = 'center';
-        ball.style.justifyContent = 'center';
-        ball.style.fontSize = '16px';
-        ball.style.fontWeight = 'bold';
-        ball.src = "favicon.png"
+        ball.style.objectFit = 'cover';
+        ball.src = "favicon.png";
         
         attachBallDragHandlers(ball);
         
@@ -287,6 +273,12 @@
             hasMoved = true;
             isDragging = true;
             
+            if (customEditorPanel) {
+                customEditorPanel.remove();
+                customEditorPanel = null;
+                activeCustomPlayer = null;
+            }
+            
             const rect = draggedOriginal.getBoundingClientRect();
             draggedClone = draggedOriginal.cloneNode(true);
             draggedClone.style.position = 'fixed';
@@ -342,7 +334,6 @@
                 } else if (draggedOriginal.classList.contains('ball-on-field')) {
                     draggedOriginal.style.left = coords.left + 'px';
                     draggedOriginal.style.top = coords.top + 'px';
-                    draggedOriginal.style.opacity = '1';
                 }
             }
         }
@@ -371,9 +362,6 @@
             draggedClone.remove();
             draggedClone = null;
         }
-        if (draggedOriginal && !draggedOriginal.classList.contains('ball')) {
-            draggedOriginal.style.opacity = '1';
-        }
         draggedOriginal = null;
         isDragging = false;
         hasMoved = false;
@@ -392,7 +380,7 @@
         }
     }
     
-    function createFieldPlayer(type, leftPx, topPx, customName = null, customColor = null) {
+    function createFieldPlayer(type, leftPx, topPx, customName = null) {
         const player = document.createElement('div');
         const typeLower = type === 'CUSTOM' ? 'custom' : type.toLowerCase();
         player.className = `player ${typeLower}`;
@@ -400,7 +388,6 @@
         
         if (type === 'CUSTOM') {
             if (customName) player.setAttribute('data-custom-name', customName);
-            if (customColor) player.setAttribute('data-custom-color', customColor);
         }
         
         player.style.position = 'absolute';
@@ -422,9 +409,8 @@
         player.style.color = getPlayerTextColor(type);
         player.style.cursor = 'grab';
         player.style.zIndex = '100';
-        player.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
         player.style.userSelect = 'none';
-        player.style.backgroundColor = getPlayerColor(type, customColor);
+        player.style.backgroundColor = getPlayerColor(type);
         player.style.textAlign = 'center';
         player.style.wordBreak = 'break-word';
         player.style.padding = '5px';
@@ -455,8 +441,8 @@
         }
     }
     
-    function addPlayerToField(type, leftPx, topPx, customName = null, customColor = null) {
-        const newPlayer = createFieldPlayer(type, leftPx, topPx, customName, customColor);
+    function addPlayerToField(type, leftPx, topPx, customName = null) {
+        const newPlayer = createFieldPlayer(type, leftPx, topPx, customName);
         field.appendChild(newPlayer);
         playersOnField.push(newPlayer);
         return newPlayer;
@@ -602,7 +588,7 @@
                 if (isFromMenu) {
                     const playerType = getPlayerType(draggedOriginal);
                     if (playerType === 'CUSTOM') {
-                        addPlayerToField('CUSTOM', coords.left, coords.top, 'N/A', null);
+                        addPlayerToField('CUSTOM', coords.left, coords.top, 'N/A');
                     } else {
                         addPlayerToField(playerType, coords.left, coords.top);
                     }
