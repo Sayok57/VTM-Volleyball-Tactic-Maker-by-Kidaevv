@@ -7,6 +7,7 @@
     --s-color: rgb(255, 51, 0);
     --op-color: rgb(255, 0, 119);
     --l-color: rgb(0, 253, 0);
+    --custom-color: rgb(0, 0, 0);
     --net: rgb(15, 15, 15);
     --container: rgb(255, 255, 255);
     --bg: rgb(54, 54, 54);
@@ -79,11 +80,10 @@ main{
     align-items: center;
     width: 40px;
     height: 40px;
-    background-color: rgb(255, 0, 0);
+    background-color: rgb(5, 5, 5);
     border-radius: 50%;
     font-size: 12px;
     font-weight: 800;
-    color: black;
     touch-action: manipulation;
 }
 .s{
@@ -116,4 +116,13 @@ button{
     font-size: 16px;
     font-weight: 800;
     color: black;
+}
+.custom{
+    font-size: 8px;
+    background-color: var(--custom-color);
+    color: var(--white);
+}
+.ball{
+    width: 20px;
+    height: 20px;
 }
